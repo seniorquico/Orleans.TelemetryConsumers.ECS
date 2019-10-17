@@ -2,6 +2,12 @@
   "version": 1,
   "isRoot": true,
   "tools": {
+    "codecov.tool": {
+      "version": "1.7.2",
+      "commands": [
+        "codecov"
+      ]
+    },
     "dotnet-reportgenerator-globaltool": {
       "version": "4.3.0",
       "commands": [
