@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <DockerLaunchAction>None</DockerLaunchAction>
+    <DockerTargetOS>Linux</DockerTargetOS>
+    <ProjectGuid>15c290f7-196e-4fdf-b9bf-6686bb80a1a3</ProjectGuid>
+    <ProjectVersion>2.1</ProjectVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="docker-compose.override.yml">
+      <DependentUpon>docker-compose.yml</DependentUpon>
+    </None>
+    <None Include="docker-compose.yml" />
+    <None Include=".dockerignore" />
+  </ItemGroup>
+
+</Project>

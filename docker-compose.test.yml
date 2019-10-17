@@ -1,0 +1,74 @@
+# The latest version supported by both Docker Desktop for Windows and Shippable.
+version: "3.6"
+
+networks:
+  # This network provides connectivity to the ECS Local Container Endpoints.
+  aws_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "169.254.170.0/24"
+      driver: default
+  # This network provides default connectivity.
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+
+services:
+  # This service hosts the ECS Local Container Endpoints.
+  aws_ecs_endpoints:
+    depends_on:
+      - localstack
+    environment:
+      - AWS_ACCESS_KEY_ID=accessKey
+      - AWS_REGION=us-east-1
+      - AWS_SECRET_ACCESS_KEY=secretAccessKey
+      - IAM_CUSTOM_ENDPOINT=http://localstack:4593
+      - STS_CUSTOM_ENDPOINT=http://localstack:4592
+    # TODO: Switch to `amazon/amazon-ecs-local-container-endpoints` after changes are merged.
+    # https://github.com/awslabs/amazon-ecs-local-container-endpoints/pull/17
+    image: seniorquico/amazon-ecs-local-container-endpoints:latest
+    networks:
+      aws_network:
+        # This is the well-known IP address automatically used by the AWS CLI and AWS SDKs.
+        ipv4_address: "169.254.170.2"
+      default:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # This service hosts the local AWS services (IAM, S3, etc.).
+  localstack:
+    environment:
+      - DEFAULT_REGION=us-east-1
+      - SERVICES=iam,s3,sts
+    image: localstack/localstack:latest
+    networks:
+      - default
+    ports:
+      - "4572:4572"
+      - "4592:4592"
+      - "4593:4593"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # This service contains the project and runs the tests.
+  project:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - aws_ecs_endpoints
+      - localstack
+    entrypoint: "dotnet test test/Orleans.TelemetryConsumers.ECS.Tests/Orleans.TelemetryConsumers.ECS.Tests.csproj --configuration Release --framework netcoreapp3.0 --no-build --no-restore --runtime debian.10-x64"
+    environment:
+      - AWS_CONTAINER_CREDENTIALS_RELATIVE_URI=/creds
+      - AWS_DEFAULT_REGION=us-east-1
+      - ECS_CONTAINER_METADATA_URI=http://169.254.170.2/v3
+    image: seniorquico/orleans-telemetryconsumers-ecs:latest
+    networks:
+      aws_network:
+        # This IP address must be unique!
+        ipv4_address: "169.254.170.3"
+      default:

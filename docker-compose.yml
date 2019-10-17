@@ -1,0 +1,9 @@
+# The latest version supported by both Docker Desktop for Windows and Shippable.
+version: "3.6"
+
+services:
+  test_runner:
+    build:
+      context: .
+      dockerfile: test/Orleans.TelemetryConsumers.ECS.TestRunner/Dockerfile
+    image: seniorquico/orleans-telemetryconsumers-ecs

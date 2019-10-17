@@ -1,0 +1,63 @@
+# The latest version supported by both Docker Desktop for Windows and Shippable.
+version: "3.6"
+
+networks:
+  # This network provides connectivity to the ECS Local Container Endpoints.
+  aws_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "169.254.170.0/24"
+      driver: default
+  # This network provides default connectivity.
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+
+services:
+  # This service hosts the ECS Local Container Endpoints.
+  aws_ecs_endpoints:
+    depends_on:
+      - localstack
+    environment:
+      - AWS_REGION=us-east-1
+    image: amazon/amazon-ecs-local-container-endpoints:latest
+    networks:
+      aws_network:
+        # This is the well-known IP address automatically used by the AWS CLI and AWS SDKs.
+        ipv4_address: "169.254.170.2"
+      default:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # This service hosts the local AWS services (IAM, S3, etc.).
+  localstack:
+    environment:
+      - DEFAULT_REGION=us-east-1
+      - SERVICES=s3
+    image: localstack/localstack:latest
+    networks:
+      - default
+    ports:
+      - "4572:4572"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # This service contains the test runner.
+  runner:
+    depends_on:
+      - aws_ecs_endpoints
+      - localstack
+    entrypoint: "tail -f /dev/null"
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - ECS_CONTAINER_METADATA_URI=http://169.254.170.2/v3
+    #image: mesosphere/aws-cli:latest
+    image: mcr.microsoft.com/dotnet/core/sdk:3.0.100-buster
+    networks:
+      aws_network:
+        # This IP address must be unique!
+        ipv4_address: "169.254.170.3"
+      default:

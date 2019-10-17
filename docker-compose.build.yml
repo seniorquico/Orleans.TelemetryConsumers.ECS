@@ -1,0 +1,10 @@
+# The latest version supported by both Docker Desktop for Windows and Shippable.
+version: "3.6"
+
+services:
+  # This service contains the project and runs the tests.
+  project:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: seniorquico/orleans-telemetryconsumers-ecs:latest
