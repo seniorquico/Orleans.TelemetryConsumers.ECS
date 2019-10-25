@@ -22,9 +22,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.3.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
-    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="3.0.0-rc1" />
-    <PackageReference Include="Moq" Version="4.13.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="7.17.0.9346">
+    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="3.0.0" />
+    <PackageReference Include="Moq" Version="4.13.1" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.0.0.9566">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
