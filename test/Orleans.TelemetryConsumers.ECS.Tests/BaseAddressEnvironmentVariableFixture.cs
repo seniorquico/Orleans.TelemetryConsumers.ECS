@@ -1,40 +1,36 @@
-﻿using System;
+﻿namespace Orleans.TelemetryConsumers.ECS;
 
-namespace Orleans.TelemetryConsumers.ECS
+public sealed class BaseAddressEnvironmentVariableFixture : IDisposable
 {
-    public sealed class BaseAddressEnvironmentVariableFixture :
-        IDisposable
+    private const string ENVIRONMENT_VARIABLE = "ECS_CONTAINER_METADATA_URI";
+
+    private readonly string? originalValue;
+
+    private bool changed;
+
+    public BaseAddressEnvironmentVariableFixture()
     {
-        private const string ENVIRONMENT_VARIABLE = "ECS_CONTAINER_METADATA_URI";
-
-        private readonly string? originalValue;
-
-        private bool changed;
-
-        public BaseAddressEnvironmentVariableFixture()
+        this.originalValue = Environment.GetEnvironmentVariable(ENVIRONMENT_VARIABLE);
+        if (this.originalValue != null)
         {
-            this.originalValue = Environment.GetEnvironmentVariable(ENVIRONMENT_VARIABLE);
-            if (this.originalValue != null)
-            {
-                this.Reset();
-            }
+            this.Reset();
         }
+    }
 
-        public void Dispose()
+    public void Dispose()
+    {
+        if (this.changed)
         {
-            if (this.changed)
-            {
-                Environment.SetEnvironmentVariable(ENVIRONMENT_VARIABLE, this.originalValue);
-            }
+            Environment.SetEnvironmentVariable(ENVIRONMENT_VARIABLE, this.originalValue);
         }
+    }
 
-        public void Reset() =>
-            this.Set(null);
+    public void Reset() =>
+        this.Set(null);
 
-        public void Set(string? value)
-        {
-            this.changed = true;
-            Environment.SetEnvironmentVariable(ENVIRONMENT_VARIABLE, value);
-        }
+    public void Set(string? value)
+    {
+        this.changed = true;
+        Environment.SetEnvironmentVariable(ENVIRONMENT_VARIABLE, value);
     }
 }
