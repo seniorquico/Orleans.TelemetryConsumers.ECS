@@ -36,6 +36,18 @@ internal static class ServiceCollectionExtensions
 
         services.AddSingleton(baseAddressProvider);
         services.AddSingleton<IEcsTaskMetadataSerializerProvider, EcsTaskMetadataSerializerProvider>();
+
+        // The circuit breaker policy is stateful, and it's necessary to use a shared instance.
+        var circuitBreaker = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .CircuitBreakerAsync(5, TimeSpan.FromSeconds(60), (response, timespan, context) =>
+            {
+                var logger = context.GetLogger();
+                if (logger != null)
+                {
+                    LogCircuitBreaker(logger, null);
+                }
+            }, (context) => { });
         services
             .AddHttpClient<IEcsTaskMetadataClient, EcsTaskMetadataClient>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -45,28 +57,16 @@ internal static class ServiceCollectionExtensions
                 UseDefaultCredentials = false,
                 UseProxy = false,
             })
-            .AddPolicyHandler((serviceProvider, request) => HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .WaitAndRetryAsync(
-                    3, _ => TimeSpan.FromMilliseconds(250), (response, timespan, retryCount, context) =>
-                    {
-                        var logger = serviceProvider.GetService<ILogger<IEcsTaskMetadataClient>>();
-                        if (logger != null)
-                        {
-                            LogRetry(logger, timespan.TotalMilliseconds, retryCount, null);
-                        }
-                    }))
-            .AddPolicyHandler((serviceProvider, request) => HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30), (response, timespan) =>
-                    {
-                        LoggerMessage.Define(LogLevel.Warning, 2, "");
-                        var logger = serviceProvider.GetService<ILogger<IEcsTaskMetadataClient>>();
-                        if (logger != null)
-                        {
-                            LogCircuitBreaker(logger, null);
-                        }
-                    }, () => { }));
+            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(250), (response, timespan, retryCount, context) =>
+            {
+                var logger = context.GetLogger();
+                if (logger != null)
+                {
+                    LogRetry(logger, timespan.TotalMilliseconds, retryCount, null);
+                }
+            }))
+            .AddPolicyHandler(circuitBreaker);
+
         services.AddSingleton<IEcsTaskMetadataClientFactory, EcsTaskMetadataClientFactory>();
         return true;
     }

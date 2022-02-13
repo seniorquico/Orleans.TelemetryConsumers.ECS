@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Polly;
 
 namespace Orleans.TelemetryConsumers.ECS;
 
@@ -91,7 +92,10 @@ internal sealed class EcsTaskMetadataClient : IEcsTaskMetadataClient
     /// </returns>
     private async Task<T?> GetAsync<T>(string relativePath, CancellationToken cancellationToken) where T : class
     {
-        using var response = await this.httpClient.GetAsync(new Uri(relativePath, UriKind.Relative), HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(relativePath, UriKind.Relative));
+        request.SetPolicyExecutionContext(new Context().WithLogger(this.logger));
+
+        using var response = await this.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             return default;
