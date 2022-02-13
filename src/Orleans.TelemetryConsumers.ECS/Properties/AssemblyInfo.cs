@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 /*
  * The "DynamicProxyGenAssembly2" a well-known assembly name used by Moq (and Castle DynamicProxy, one of its underlying
@@ -7,3 +7,4 @@ using System.Runtime.CompilerServices;
  */
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 [assembly: InternalsVisibleTo("Orleans.TelemetryConsumers.ECS.Tests")]
+[assembly: CLSCompliant(false)]

@@ -1,43 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Orleans.TelemetryConsumers.ECS
+namespace Orleans.TelemetryConsumers.ECS;
+
+public sealed class EcsTaskMetadataClientFactoryTest
 {
-    public sealed class EcsTaskMetadataClientFactoryTest
+    [Fact]
+    public void Create()
     {
-        [Fact]
-        public void Create()
-        {
-            // Arrange
-            var client = new TestEcsTaskMetadataClient();
+        // Arrange
+        var client = new TestEcsTaskMetadataClient();
 
-            var serviceProvider = new ServiceCollection()
-                .AddSingleton<IEcsTaskMetadataClient>(client)
-                .BuildServiceProvider();
+        var serviceProvider = new ServiceCollection()
+            .AddSingleton<IEcsTaskMetadataClient>(client)
+            .BuildServiceProvider();
 
-            // Act
-            var actualClientFactory = new EcsTaskMetadataClientFactory(serviceProvider);
-            var actualClient = actualClientFactory.Create();
+        // Act
+        var actualClientFactory = new EcsTaskMetadataClientFactory(serviceProvider);
+        var actualClient = actualClientFactory.Create();
 
-            // Assert
-            Assert.Same(client, actualClient);
-        }
+        // Assert
+        Assert.Same(client, actualClient);
+    }
 
-        [Fact]
-        public void InstantiateWithoutServiceProviderThrowsError() =>
-            Assert.Throws<ArgumentNullException>("serviceProvider", () => new EcsTaskMetadataClientFactory(null));
+    [Fact]
+    public void InstantiateWithoutServiceProviderThrowsError() =>
+        Assert.Throws<ArgumentNullException>("serviceProvider", () => new EcsTaskMetadataClientFactory(null));
 
-        private sealed class TestEcsTaskMetadataClient : IEcsTaskMetadataClient
-        {
-            public Task<EcsContainerStats?> GetContainerStatsAsync(CancellationToken cancellationToken) =>
-                throw new NotImplementedException();
+    private sealed class TestEcsTaskMetadataClient : IEcsTaskMetadataClient
+    {
+        public Task<EcsContainerStats?> GetContainerStatsAsync(CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
 
-            public Task<Dictionary<string, EcsContainerStats>?> GetTaskStatsAsync(CancellationToken cancellationToken) =>
-                throw new NotImplementedException();
-        }
+        public Task<Dictionary<string, EcsContainerStats>?> GetTaskStatsAsync(CancellationToken cancellationToken) =>
+            throw new NotImplementedException();
     }
 }

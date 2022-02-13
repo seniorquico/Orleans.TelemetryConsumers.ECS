@@ -1,4 +1,5 @@
 {
+  "dotnet-test-explorer.testProjectPath": "./test/Orleans.TelemetryConsumers.ECS.Tests",
   "editor.formatOnSave": true,
   "editor.minimap.maxColumn": 120,
   "editor.minimap.showSlider": "always",
